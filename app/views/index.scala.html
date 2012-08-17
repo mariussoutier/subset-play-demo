@@ -1,0 +1,13 @@
+@(tweets: Seq[Tweet])
+
+@main("Demo of Subset") {
+
+  <h1>Tweeting right now...</h1>
+  <ul>
+  @for(tweet <- tweets.take(5)) {
+    <li>@tweet.content by @tweet.user.name
+      <a href="@routes.Application.showTweetsForUser(tweet.user._id)">Show more from user</a></li>
+  }
+  </ul>
+
+}

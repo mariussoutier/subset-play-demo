@@ -1,0 +1,11 @@
+@(user: User, tweets: Seq[String])
+
+<h2>Tweets for user @user.name</h2>
+
+<ul>
+@for(tweet <- tweets) {
+  <li>@tweet</li>
+}
+</ul>
+
+<a href="/">Back</a>
