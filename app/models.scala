@@ -6,8 +6,9 @@ import com.osinka.subset._
 
 object db {
   lazy val db = new Mongo("localhost") getDB "subset-test"
-  lazy val tweets = db getCollection "tweets"
-  lazy val users = db getCollection "users"
+  // Casbah makes it even more fluid
+  lazy val tweets = new MongoCollection(db getCollection "tweets")
+  lazy val users = new MongoCollection(db getCollection "users")
 }
 
 import models.db._
@@ -21,9 +22,9 @@ object User {
     def unpack(o: Any): Option[User] =
       o match {
         case id: ObjectId =>
-          Option(users findOne id) collect { case name(n) => new User(id, n) }
-        case _ =>
-          None
+          users findOneByID id collect { case name(n) => new User(id, n) }
+        //case dbo: DBObject => User(id, name)
+        case _ => None
       }
   }
 
@@ -43,13 +44,13 @@ object User {
   }
 
   def findUserByName(userName: String): Option[User] = {
-    import collection.JavaConverters._
-    users.find(name === userName).iterator.asScala.collectFirst {
+    users find(name === userName) collectFirst {
       case Document.DocumentId(id) ~ name(name) => User(id, name)
     }
   }
 }
 
+// TODO: at: java.util.Date
 case class Tweet(content: String, user: User)
 
 object Tweet {
@@ -58,15 +59,13 @@ object Tweet {
   val user = "user".fieldOf[User]
 
   def all: Seq[Tweet] = {
-    import collection.JavaConverters._
-    tweets.find.iterator.asScala map {
+    tweets.find map {
       case Document.DocumentId(id) ~ content(content) ~ user(user) => Tweet(content, user)
     } toSeq
   }
 
   def tweetsForUser(aUser: User): Seq[Tweet] = {
-    import collection.JavaConverters._
-    tweets.find(user.as[ObjectId] === aUser._id).iterator.asScala collect {
+    tweets find(user.as[ObjectId] === aUser._id) collect {
       case Document.DocumentId(id) ~ content(content) ~ user(user) => Tweet(content, user)
     } toSeq
   }

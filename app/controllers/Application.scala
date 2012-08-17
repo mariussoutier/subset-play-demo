@@ -11,19 +11,18 @@ import com.mongodb.casbah.Imports._
 object Application extends Controller {
 
   def index = Action {
-    import collection.JavaConverters._
+    // In combination with Casbah
+    //MongoCollection(tweets).find
+
     Ok(views.html.index(Tweet.all))
   }
 
   def showTweetsForUser(id: ObjectId) = Action {
-    import collection.JavaConverters._
     User.findOneById(id) map { aUser =>
-
-      val tweetContents: Seq[String] = tweets.find(Tweet.user.as[ObjectId] === aUser._id).iterator.asScala collect {
+      val tweetContents = tweets.find(Tweet.user.as[ObjectId] === aUser._id) collect {
         case Tweet.content(content) => content
-      } toSeq
-
-      Ok(views.html.userTweets(aUser, tweetContents))
+      }
+      Ok(views.html.userTweets(aUser, tweetContents.toSeq))
     } getOrElse NotFound
   }
 
